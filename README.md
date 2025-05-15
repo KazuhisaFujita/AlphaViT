@@ -12,6 +12,7 @@ The repository is structured as follows:
 ├── AlphaViT/  : Source code for AlphaViT
 ├── AlphaZero/ : Source code for the AlphaZero baseline
 ├── models/    : Pretrained model weights for various configurations
+├── RawData/   : Raw data for my manuscript (https://arxiv.org/abs/2408.13871)
 ├── LICENSE    : License information
 ├── README.md  : Project documentation
 ```
