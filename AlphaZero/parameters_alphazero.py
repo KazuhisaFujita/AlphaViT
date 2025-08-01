@@ -1,6 +1,6 @@
 #---------------------------------------
 #Since : 2019/04/25
-#Update: 2024/12/01
+#Update: 2025/05/27
 # -*- coding: utf-8 -*-
 #---------------------------------------
 import math
@@ -51,9 +51,10 @@ class Parameters:
         self.epochs            = 1    # the number of epochs every iteration
         self.batch_size        = 1024 # the size of the mini batch
         self.num_batch         = math.ceil(self.input_size/self.batch_size)
-        self.lam               = 5e-2 # learning rate
-        self.weight_decay      = 1e-4 # weight decay
-        self.momentum          = 0.9  # momentum
+        self.lam               = 1e-4 # learning rate
+        # self.lam               = 5e-2 # learning rate
+        # self.weight_decay      = 1e-4 # weight decay
+        # self.momentum          = 0.9  # momentum
 
         self.k_boards          = 1      # the number of board states in one input
         self.input_channels    = (self.k_boards * 2) + 1 # the number of channels of an input
