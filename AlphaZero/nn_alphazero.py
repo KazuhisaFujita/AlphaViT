@@ -1,6 +1,6 @@
 #---------------------------------------
 #Since : 2019/04/08
-#Update: 2024/10/03
+#Update: 2025/05/16
 # -*- coding: utf-8 -*-
 #---------------------------------------
 import torch
@@ -112,10 +112,10 @@ class NNetWrapper:
         self.net.eval()
         with torch.no_grad():
             # FP16
-            #with amp.autocast():
+            with amp.autocast():
                 pi, v = self.net(board)
 
-        return torch.exp(pi).detach().to('cpu').numpy()[0], v.item()
+        return torch.exp(pi).data.to('cpu').numpy()[0], v.item()
 
     def train(self, training_board, training_prob, training_v):
         # mixed precision
@@ -131,7 +131,8 @@ class NNetWrapper:
 
         ds_train = torch.utils.data.TensorDataset(training_board, training_prob, training_v)
         train_loader = torch.utils.data.DataLoader(ds_train, batch_size = self.params.batch_size, shuffle=True, num_workers = 1, pin_memory = True)
-        optimizer = optim.SGD(model.parameters(), lr = self.params.lam, weight_decay = self.params.weight_decay, momentum = self.params.momentum)
+        #optimizer = optim.SGD(model.parameters(), lr = self.params.lam, weight_decay = self.params.weight_decay, momentum = self.params.momentum)
+        optimizer = optim.AdamW(model.parameters(), lr=self.params.lam)
 
         self.total_loss = 0
         self.lo_pi      = 0
@@ -152,22 +153,23 @@ class NNetWrapper:
                 l_v = self.loss_v(vs, out_vs)
                 total_l = l_pi + l_v
 
-                optimizer.zero_grad()
-                total_l.backward()
-                optimizer.step()
+                # FP32
+                # optimizer.zero_grad()
+                # total_l.backward()
+                # optimizer.step()
 
                 # FP16
-                # with amp.autocast():
-                #     out_pis, out_vs = model(boards)
+                with amp.autocast():
+                    out_pis, out_vs = model(boards)
 
-                #     l_pi = self.loss_pi(pis, out_pis)
-                #     l_v = self.loss_v(vs, out_vs)
-                #     total_l = l_pi + l_v
+                    l_pi = self.loss_pi(pis, out_pis)
+                    l_v = self.loss_v(vs, out_vs)
+                    total_l = l_pi + l_v
 
-                # optimizer.zero_grad()
-                # scaler.scale(total_l).backward()
-                # scaler.step(optimizer)
-                # scaler.update()
+                optimizer.zero_grad()
+                scaler.scale(total_l).backward()
+                scaler.step(optimizer)
+                scaler.update()
 
                 self.total_loss += total_l.item()
                 self.lo_pi      += l_pi.item()
